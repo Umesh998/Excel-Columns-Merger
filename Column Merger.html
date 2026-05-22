@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///C:/Users/Adarsh%20Ranpura/Downloads/column_merger_2.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Column Merger</title>
+<script src="./Column Merger_files/xlsx.full.min.js.download"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f0f2f5;
+    min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: 2.5rem 1rem 4rem;
+    color: #1a1a1a;
+  }
+  .card {
+    background: #fff; border-radius: 16px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.09);
+    width: 100%; max-width: 640px; padding: 2rem;
+  }
+  .header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.75rem; }
+  .icon-wrap {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: #e8f5e9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .icon-wrap svg { width: 22px; height: 22px; stroke: #2e7d32; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .header h1 { font-size: 17px; font-weight: 600; color: #111; }
+  .header p  { font-size: 13px; color: #777; margin-top: 2px; }
+  .upload-area {
+    border: 2px dashed #d0d5dd; border-radius: 12px;
+    padding: 2.25rem 1rem; text-align: center; cursor: pointer;
+    background: #fafafa; transition: border-color 0.2s, background 0.2s; margin-bottom: 1.25rem;
+  }
+  .upload-area:hover, .upload-area.drag-over { border-color: #43a047; background: #f1f8e9; }
+  .upload-area svg { width: 36px; height: 36px; stroke: #bbb; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 10px; }
+  .upload-area p { font-size: 14px; color: #555; }
+  .upload-area span { color: #43a047; text-decoration: underline; }
+  .upload-area small { font-size: 12px; color: #999; display: block; margin-top: 4px; }
+  .file-bar {
+    display: none; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 10px;
+    border: 1px solid #e0e0e0; background: #fafafa; margin-bottom: 1.25rem;
+  }
+  .file-bar svg { width: 18px; height: 18px; stroke: #43a047; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .file-bar .fname { font-size: 13px; color: #222; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-bar .frows { font-size: 12px; color: #888; flex-shrink: 0; }
+  .reset-btn { background: none; border: none; cursor: pointer; color: #bbb; font-size: 18px; line-height: 1; padding: 0 2px; }
+  .reset-btn:hover { color: #e53935; }
+  .config { display: none; }
+  .field-label { display: block; font-size: 13px; color: #555; font-weight: 500; margin-bottom: 6px; }
+  .col-builder-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .add-col-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 12px; font-size: 13px;
+    border-radius: 8px; border: 1px solid #43a047;
+    background: #e8f5e9; color: #2e7d32;
+    cursor: pointer; font-family: inherit; font-weight: 500; transition: background 0.15s;
+  }
+  .add-col-btn:hover { background: #c8e6c9; }
+  .col-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+  .col-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 10px;
+    border: 1px solid #e8e8e8; background: #fafafa;
+    cursor: grab; transition: box-shadow 0.15s;
+    user-select: none;
+  }
+  .col-item.dragging { opacity: 0.4; }
+  .col-item.drag-over-top { border-top: 2.5px solid #43a047; }
+  .col-item.drag-over-bottom { border-bottom: 2.5px solid #43a047; }
+  .drag-handle { display: flex; flex-direction: column; gap: 3px; padding: 2px 4px; cursor: grab; flex-shrink: 0; }
+  .drag-handle span { display: block; width: 16px; height: 2px; background: #ccc; border-radius: 2px; }
+  .col-badge {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: #e8f5e9; color: #2e7d32;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .col-item select {
+    flex: 1; height: 34px; border-radius: 7px;
+    border: 1px solid #ddd; background: #fff; color: #1a1a1a;
+    font-size: 13px; padding: 0 8px; outline: none; font-family: inherit;
+  }
+  .col-item select:focus { border-color: #43a047; }
+  .remove-col-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 17px; line-height: 1; padding: 0 2px; flex-shrink: 0; }
+  .remove-col-btn:hover { color: #e53935; }
+  .sep-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .sep-btn {
+    padding: 5px 13px; font-size: 13px; border-radius: 8px;
+    border: 1px solid #d0d5dd; background: #f5f5f5; color: #555;
+    cursor: pointer; font-family: inherit; transition: all 0.12s;
+  }
+  .sep-btn:hover { border-color: #43a047; color: #2e7d32; }
+  .sep-btn.active { background: #e8f5e9; border-color: #43a047; color: #2e7d32; font-weight: 500; }
+  input[type="text"] {
+    width: 100%; height: 38px; border-radius: 8px;
+    border: 1px solid #d0d5dd; background: #f9f9f9; color: #1a1a1a;
+    font-size: 14px; padding: 0 10px; outline: none; font-family: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s; margin-bottom: 1rem;
+  }
+  input[type="text"]:focus { border-color: #43a047; box-shadow: 0 0 0 3px rgba(67,160,71,0.12); background: #fff; }
+  .preview-box { border: 1px solid #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 1.25rem; overflow-x: auto; }
+  .preview-header {
+    padding: 8px 14px; background: #f5f5f5; border-bottom: 1px solid #e8e8e8;
+    font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .preview-table { width: 100%; border-collapse: collapse; min-width: 400px; }
+  .preview-table th {
+    padding: 8px 12px; text-align: left; font-size: 11px; color: #888; font-weight: 600;
+    background: #fafafa; border-bottom: 1px solid #f0f0f0; text-transform: uppercase; letter-spacing: 0.03em; white-space: nowrap;
+  }
+  .preview-table th.merged-th { color: #2e7d32; }
+  .preview-table td { padding: 8px 12px; font-size: 13px; color: #333; border-bottom: 1px solid #f5f5f5; white-space: nowrap; }
+  .preview-table tr:last-child td { border-bottom: none; }
+  .preview-table td.merged { color: #2e7d32; font-weight: 500; }
+  .empty-val { color: #ccc; }
+  .download-btn {
+    width: 100%; height: 44px; border-radius: 10px;
+    border: 1px solid #388e3c; background: #43a047; color: #fff;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: inherit; transition: background 0.15s;
+  }
+  .download-btn:hover { background: #388e3c; }
+  .download-btn svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .divider { height: 1px; background: #f0f0f0; margin: 1.25rem 0; }
+  .section-gap { margin-bottom: 1rem; }
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #323232; color: #fff; font-size: 13px;
+    padding: 10px 20px; border-radius: 8px; opacity: 0;
+    transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="icon-wrap">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="18" rx="1"></rect><rect x="10" y="3" width="5" height="18" rx="1"></rect><rect x="17" y="3" width="4" height="18" rx="1"></rect></svg>
+    </div>
+    <div>
+      <h1>Column Merger</h1>
+      <p>Merge any number of columns in any order you want</p>
+    </div>
+  </div>
+
+  <div class="upload-area" id="upload-area" onclick="document.getElementById(&#39;file-input&#39;).click()" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+    <p>Drop your file here, or <span>browse</span></p>
+    <small>.xlsx &nbsp;·&nbsp; .xls &nbsp;·&nbsp; .csv</small>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleFile(event)">
+  </div>
+
+  <div class="file-bar" id="file-bar">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><polyline points="9 11 12 14 15 11"></polyline></svg>
+    <span class="fname" id="file-name"></span>
+    <span class="frows" id="file-rows"></span>
+    <button class="reset-btn" onclick="resetApp()">✕</button>
+  </div>
+
+  <div class="config" id="config">
+    <div class="section-gap">
+      <div class="col-builder-header">
+        <label class="field-label" style="margin:0;">Columns to merge <span style="color:#aaa;font-weight:400;">(drag to reorder)</span></label>
+        <button class="add-col-btn" onclick="addColumn()">+ Add column</button>
+      </div>
+      <div class="col-list" id="col-list"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-gap">
+      <label class="field-label">Separator between columns</label>
+      <div class="sep-group">
+        <button class="sep-btn active" onclick="setSep(this,&#39; &#39;)">Space</button>
+        <button class="sep-btn" onclick="setSep(this,&#39; - &#39;)">Dash</button>
+        <button class="sep-btn" onclick="setSep(this,&#39;, &#39;)">Comma</button>
+        <button class="sep-btn" onclick="setSep(this,&#39; | &#39;)">Pipe</button>
+        <button class="sep-btn" onclick="setSep(this,&#39;/&#39;)">Slash</button>
+        <button class="sep-btn" onclick="setSep(this,&#39;&#39;)">None</button>
+      </div>
+    </div>
+
+    <div class="section-gap">
+      <label class="field-label">Merged column name</label>
+      <input type="text" id="col-name" value="Description" oninput="updatePreview()">
+    </div>
+
+    <div class="preview-box">
+      <div class="preview-header">Preview — first 5 rows</div>
+      <div id="preview-content"></div>
+    </div>
+
+    <button class="download-btn" onclick="downloadMerged()">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Download merged Excel file
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let rows = [], headers = [], sep = ' ', fileName = '';
+let selectedCols = [0, 1];
+let dragSrcIdx = null;
+
+function onDragOver(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('drag-over'); }
+function onDragLeave(e) { document.getElementById('upload-area').classList.remove('drag-over'); }
+function onDrop(e) { e.preventDefault(); onDragLeave(e); const f = e.dataTransfer.files[0]; if (f) processFile(f); }
+function handleFile(e) { const f = e.target.files[0]; if (f) processFile(f); }
+
+function processFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['xlsx','xls','csv'].includes(ext)) { showToast('Please upload an Excel or CSV file'); return; }
+  fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!json.length) { showToast('File appears empty'); return; }
+    headers = json[0].map((h, i) => h !== '' ? String(h) : 'Column ' + (i + 1));
+    rows = json.slice(1);
+    selectedCols = headers.length >= 2 ? [0, 1] : [0];
+    document.getElementById('file-name').textContent = fileName;
+    document.getElementById('file-rows').textContent = rows.length.toLocaleString() + ' rows';
+    document.getElementById('file-bar').style.display = 'flex';
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('config').style.display = 'block';
+    renderColList();
+    updatePreview();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderColList() {
+  const list = document.getElementById('col-list');
+  list.innerHTML = '';
+  selectedCols.forEach((colIdx, pos) => {
+    const item = document.createElement('div');
+    item.className = 'col-item';
+    item.draggable = true;
+    item.dataset.pos = pos;
+
+    const handle = document.createElement('div');
+    handle.className = 'drag-handle';
+    handle.innerHTML = '<span></span><span></span><span></span>';
+
+    const badge = document.createElement('div');
+    badge.className = 'col-badge';
+    badge.textContent = pos + 1;
+
+    const sel = document.createElement('select');
+    sel.innerHTML = headers.map((h, i) => `<option value="${i}"${i == colIdx ? ' selected' : ''}>${h}</option>`).join('');
+    sel.onchange = () => { selectedCols[pos] = parseInt(sel.value); updatePreview(); };
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-col-btn';
+    removeBtn.innerHTML = '&#x2715;';
+    removeBtn.title = 'Remove';
+    removeBtn.onclick = () => removeCol(pos);
+
+    item.appendChild(handle);
+    item.appendChild(badge);
+    item.appendChild(sel);
+    item.appendChild(removeBtn);
+
+    item.addEventListener('dragstart', e => {
+      dragSrcIdx = pos;
+      setTimeout(() => item.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => { item.classList.remove('dragging'); clearDragStyles(); });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      clearDragStyles();
+      const rect = item.getBoundingClientRect();
+      item.classList.add((e.clientY - rect.top) < rect.height / 2 ? 'drag-over-top' : 'drag-over-bottom');
+    });
+    item.addEventListener('dragleave', () => clearDragStyles());
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      clearDragStyles();
+      if (dragSrcIdx === null || dragSrcIdx === pos) return;
+      const rect = item.getBoundingClientRect();
+      const half = (e.clientY - rect.top) < rect.height / 2 ? 'top' : 'bottom';
+      const moved = selectedCols.splice(dragSrcIdx, 1)[0];
+      let target = pos > dragSrcIdx ? pos - 1 : pos;
+      if (half === 'bottom') target += 1;
+      selectedCols.splice(Math.min(target, selectedCols.length), 0, moved);
+      dragSrcIdx = null;
+      renderColList();
+      updatePreview();
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function clearDragStyles() {
+  document.querySelectorAll('.col-item').forEach(el => {
+    el.classList.remove('drag-over-top', 'drag-over-bottom');
+  });
+}
+
+function addColumn() {
+  selectedCols.push(0);
+  renderColList();
+  updatePreview();
+}
+
+function removeCol(pos) {
+  if (selectedCols.length <= 1) { showToast('You need at least one column'); return; }
+  selectedCols.splice(pos, 1);
+  renderColList();
+  updatePreview();
+}
+
+function setSep(btn, s) {
+  sep = s;
+  document.querySelectorAll('.sep-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updatePreview();
+}
+
+function mergeRow(row) {
+  return selectedCols.map(ci => String(row[ci] || '').trim()).filter(v => v !== '').join(sep);
+}
+
+function updatePreview() {
+  const colName = document.getElementById('col-name').value || 'Merged';
+  let html = '<table class="preview-table"><thead><tr>';
+  selectedCols.forEach(ci => { html += `<th>${headers[ci]}</th>`; });
+  html += `<th class="merged-th">&#x2192; ${colName}</th></tr></thead><tbody>`;
+  rows.slice(0, 5).forEach(row => {
+    html += '<tr>';
+    selectedCols.forEach(ci => {
+      const v = String(row[ci] || '').trim();
+      html += `<td>${v || '<span class="empty-val">—</span>'}</td>`;
+    });
+    const m = mergeRow(row);
+    html += `<td class="merged">${m || '<span class="empty-val">—</span>'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('preview-content').innerHTML = html;
+}
+
+function downloadMerged() {
+  const colName = document.getElementById('col-name').value || 'Merged';
+  const data = [[colName], ...rows.map(row => [mergeRow(row)])];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{ wch: 60 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Merged');
+  XLSX.writeFile(wb, fileName.replace(/\.(xlsx|xls|csv)$/i, '') + '_merged.xlsx');
+  showToast('File downloaded successfully!');
+}
+
+function resetApp() {
+  rows = []; headers = []; fileName = ''; selectedCols = [0, 1];
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('file-bar').style.display = 'none';
+  document.getElementById('config').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+
+
+</body></html>
